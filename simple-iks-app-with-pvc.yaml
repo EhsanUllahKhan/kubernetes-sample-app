@@ -1,0 +1,89 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: eks-sample-app
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: task-pv-volume-1
+  namespace: eks-sample-app
+  labels:
+    type: local
+spec:
+  storageClassName: ibmc-vpc-block-retain-10iops-tier
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: task-pv-claim-1
+  namespace: eks-sample-app
+spec:
+  storageClassName: ibmc-vpc-block-retain-10iops-tier
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: task-pv-volume-2
+  namespace: eks-sample-app
+  labels:
+    type: local
+spec:
+  storageClassName: ibmc-vpc-block-10iops-tier
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: task-pv-claim-2
+  namespace: eks-sample-app
+spec:
+  storageClassName: ibmc-vpc-block-10iops-tier
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: task-pv-pod
+  namespace: eks-sample-app
+spec:
+  volumes:
+    - name: task-pv-storage-1
+      persistentVolumeClaim:
+        claimName: task-pv-claim-1
+    - name: task-pv-storage-2
+      persistentVolumeClaim:
+        claimName: task-pv-claim-2
+  containers:
+    - name: task-pv-container
+      image: nginx
+      ports:
+        - containerPort: 80
+          name: "http-server"
+      volumeMounts:
+        - mountPath: "/usr/share/nginx/pvc1/html"
+          name: task-pv-storage-1
+        - mountPath: "/usr/share/nginx/pvc2/html"
+          name: task-pv-storage-2
+---
