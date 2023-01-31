@@ -30,7 +30,7 @@ metadata:
   labels:
     type: local
 spec:
-  storageClassName: gp2
+  storageClassName: default
   capacity:
     storage: 10Gi
   accessModes:
@@ -46,7 +46,7 @@ spec:
       labels:
         type: local
     spec:
-      storageClassName: gp2
+      storageClassName: default
       capacity:
         storage: 10Gi
       accessModes:
@@ -65,7 +65,7 @@ spec:
   resources:
     requests:
       storage: 1Gi
-  storageClassName: gp2
+  storageClassName: default
 ---
 apiVersion: apps/v1
 kind: ReplicaSet
@@ -129,7 +129,7 @@ spec:
   resources:
     requests:
       storage: 10Gi
-  storageClassName: gp2
+  storageClassName: default
 
 ---
 apiVersion: apps/v1
