@@ -12,7 +12,7 @@ metadata:
   labels:
     type: local
 spec:
-  storageClassName: ibmc-vpc-block-retain-10iops-tier
+  storageClassName: default
   capacity:
     storage: 10Gi
   accessModes:
@@ -26,7 +26,7 @@ metadata:
   name: task-pv-claim-1
   namespace: eks-sample-app
 spec:
-  storageClassName: ibmc-vpc-block-retain-10iops-tier
+  storageClassName: default
   accessModes:
     - ReadWriteOnce
   resources:
@@ -41,7 +41,7 @@ metadata:
   labels:
     type: local
 spec:
-  storageClassName: ibmc-vpc-block-10iops-tier
+  storageClassName: default
   capacity:
     storage: 10Gi
   accessModes:
@@ -55,7 +55,7 @@ metadata:
   name: task-pv-claim-2
   namespace: eks-sample-app
 spec:
-  storageClassName: ibmc-vpc-block-10iops-tier
+  storageClassName: default
   accessModes:
     - ReadWriteOnce
   resources:
