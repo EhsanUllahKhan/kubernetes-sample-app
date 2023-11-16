@@ -12,6 +12,7 @@ oc adm policy add-scc-to-user privileged -n <project_name> -z <sa_name>
 ---
 
 
-Forcefully delete PVC 
+# Forcefully delete PVC 
+
 kubectl patch pvc {PVC_NAME} -p '{"metadata":{"finalizers":null}}'
 
