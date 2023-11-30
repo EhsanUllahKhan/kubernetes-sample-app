@@ -1,9 +1,9 @@
 # kubernetes-sample-app
 Demo apps for kubernetes clusters
 
-For openshift applications. 
+# For openshift applications. 
 1. pacman application and socks shop
-
+---
 oc adm new-project <project_name>
 ---
 oc create serviceaccount <sa_name>
