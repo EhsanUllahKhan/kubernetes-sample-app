@@ -13,7 +13,7 @@ oc adm policy add-scc-to-user privileged -n <project_name> -z <sa_name>
 
 # If Loadbalancer service is stuck in pending state, then it can be exposed on openshift. 
 ---
-oc expose service/<service-name -n <name-space>
+oc expose service/<service-name> -n <name-space>
 ---
 
 
