@@ -1,0 +1,114 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sample
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sample-service-account
+  namespace: sample
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: use-privileged-scc
+  namespace: sample # Replace with your namespace
+subjects:
+- kind: ServiceAccount
+  name: sample-service-account # Replace with your service account name
+  namespace: sample # Same namespace as above
+roleRef:
+  kind: ClusterRole
+  name: system:openshift:scc:privileged
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sample-pvc # Enter a name for your PVC.
+  namespace: sample
+spec:
+  storageClassName: ibmc-file-bronze
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 300Gi # Enter the size of the storage in gigabytes (Gi).
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample
+  namespace: sample
+  labels:
+    app: sample
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample
+  template:
+    metadata:
+      labels:
+        app: sample
+    spec:
+      serviceAccount: sample-service-account
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
+      containers:
+      - name: nginx-sample-app
+        image: nginx # The name of the container image that you want to use.
+        securityContext:
+          allowPrivilegeEscalation: false
+        volumeMounts:
+        - name: sample-vol
+          mountPath: /files
+      volumes:
+      - name: sample-vol
+        persistentVolumeClaim:
+          claimName: sample-pvc
+      nodeSelector:
+        nginxnode: nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-service
+  namespace: sample
+spec:
+  selector:
+    app: sample
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer
+---
+
+
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: sample-ingress
+#   namespace: sample
+# spec:
+#   ingressClassName: nginx # public-iks-k8s-nginx
+#   rules:
+#   - host: base-bot-prod.wanclouds.ai
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: nginx-service
+#             port:
+#               number: 80
+---
+
+

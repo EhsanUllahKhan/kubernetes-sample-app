@@ -1,0 +1,196 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pod
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pod-volume-claim
+  namespace: pod
+spec:
+  storageClassName: ibmc-block-gold
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+  namespace: pod
+spec:
+  volumes:
+  - name: pod-volume
+    persistentVolumeClaim:
+      claimName: pod-volume-claim
+  containers:
+  - name: pod-container
+    image: nginx
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - mountPath: "/mnt/disk"
+      name: pod-volume
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+  namespace: pod
+  labels:
+    app: pod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pod
+  template:
+    metadata:
+      labels:
+        app: pod
+    spec:
+      volumes:
+      - name: pod-volume
+        persistentVolumeClaim:
+          claimName: pod-volume-claim
+      containers:
+      - image: nginx
+        name: nginx
+        volumeMounts:
+        - mountPath: "/files"
+          name: pod-volume
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: pod-service
+#  namespace: pod
+#spec:
+#  selector:
+#    app: pod
+#  ports:
+#  - protocol: TCP
+#    port: 80
+#    targetPort: 80
+#  type: LoadBalancer
+#---
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    cni.projectcalico.org/containerID: 727270d6caa0ff69263e5c6809e18351b50e91f385ca1779b3a9181cc9f6b92d
+    cni.projectcalico.org/podIP: 172.30.77.144/32
+    cni.projectcalico.org/podIPs: 172.30.77.144/32
+    k8s.v1.cni.cncf.io/network-status: |-
+      [{
+          "name": "k8s-pod-network",
+          "ips": [
+              "172.30.77.144"
+          ],
+          "default": true,
+          "dns": {}
+      }]
+    kubectl.kubernetes.io/restartedAt: "2024-07-30T01:54:33Z"
+    openshift.io/scc: anyuid
+  generateName: api-chat-76b7584f58-
+  labels:
+    appname: api-chat
+    pod-template-hash: 76b7584f58
+  name: api-chat-76b7584f58-cgddh
+  namespace: connectmerchan-prod
+spec:
+  containers:
+  - env:
+    - name: NODE_ENV
+      value: container
+    - name: UPLOAD_LOCATION
+      value: /files
+    image: us.icr.io/some-image
+    imagePullPolicy: IfNotPresent
+    name: api-chat
+    ports:
+    - containerPort: 3003
+      protocol: TCP
+    resources: {}
+    securityContext:
+      capabilities:
+        drop:
+        - MKNOD
+    volumeMounts:
+    - mountPath: /files
+      name: data
+  enableServiceLinks: true
+  imagePullSecrets:
+  - name: cr-secret-ibm
+  initContainers:
+  - args:
+    - chown 1001:1001 /files;
+    command:
+    - /bin/sh
+    - -c
+    image: alpine:3.17.1
+    imagePullPolicy: IfNotPresent
+    name: initcontainer
+    resources: {}
+    securityContext:
+      capabilities:
+        drop:
+        - MKNOD
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /files
+      name: data
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext:
+    seLinuxOptions:
+      level: s0:c26,c5
+  serviceAccount: nginx-sa
+  serviceAccountName: nginx-sa
+  terminationGracePeriodSeconds: 30
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: pvc-data-prod
+  containerStatuses:
+  - containerID: cri-o://b4c71237d0fc656071c27bf2b5e578e90976e29591ebfdf6fb99b29b9f23528e
+    image: us.icr.io/some-image
+    imageID: us.icr.io/some-image/image@sha256:321
+    lastState: {}
+    name: api-chat
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2025-07-06T19:16:12Z"
+  initContainerStatuses:
+  - containerID: cri-o://0790a657012ae5a050d1954cfbf8223ce603f7e6759b40499c8082c7be4d1192
+    image: docker.io/library/alpine:3.17.1
+    imageID: docker.io/library/alpine@sha256:93d5a28ff72d288d69b5997b8ba47396d2cbb62a72b5d87cd3351094b5d578a0
+    lastState: {}
+    name: initcontainer
+    ready: true
+    restartCount: 0
+    started: false
+    state:
+      terminated:
+        containerID: cri-o://0790a657012ae5a050d1954cfbf8223ce603f7e6759b40499c8082c7be4d1192
+        exitCode: 0
+        finishedAt: "2025-07-06T19:13:45Z"
+        reason: Completed
+        startedAt: "2025-07-06T19:13:46Z"
+  phase: Running
+  podIP: 172.30.77.144
+  podIPs:
+  - ip: 172.30.77.144
+  qosClass: BestEffort
+  startTime: "2025-07-06T19:11:24Z"

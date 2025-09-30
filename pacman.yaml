@@ -4,20 +4,22 @@ kind: Namespace
 metadata:
   name: pacman
 ---
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: mongo-pv
-  namespace: pacman
-spec:
-  storageClassName: thin-csi
-  persistentVolumeReclaimPolicy: Delete
-  capacity:
-    storage: 8Gi
-  accessModes:
-    - ReadWriteOnce
-  local:
-    path: /mnt/data
+
+
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: mongo-pv
+#   namespace: pacman
+# spec:
+#   storageClassName: ibmc-block-gold
+#   persistentVolumeReclaimPolicy: Delete
+#   capacity:
+#     storage: 8Gi
+#   accessModes:
+#   - ReadWriteOnce
+#   hostPath:
+#     path: /mnt/data
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -26,11 +28,11 @@ metadata:
   namespace: pacman
 spec:
   accessModes:
-    - ReadWriteOnce
+  - ReadWriteOnce
   resources:
     requests:
       storage: 8Gi
-  storageClassName: thin-csi
+  storageClassName: ibmc-block-gold
 ---
 apiVersion: v1
 kind: Service
@@ -42,8 +44,8 @@ metadata:
 spec:
   type: LoadBalancer
   ports:
-    - port: 27017
-      targetPort: 27017
+  - port: 27017
+    targetPort: 27017
   selector:
     name: mongo
 ---
@@ -74,12 +76,12 @@ spec:
         - name: mongo
           containerPort: 27017
         volumeMounts:
-          - name: mongo-db
-            mountPath: /data/db
-      volumes:
         - name: mongo-db
-          persistentVolumeClaim:
-            claimName: mongo-storage
+          mountPath: /data/db
+      volumes:
+      - name: mongo-db
+        persistentVolumeClaim:
+          claimName: mongo-storage
 ---
 apiVersion: v1
 kind: Service
@@ -91,9 +93,9 @@ metadata:
 spec:
   type: LoadBalancer
   ports:
-    - port: 80
-      targetPort: 8080
-      protocol: TCP
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
   selector:
     name: pacman
 ---
@@ -108,7 +110,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-        name: pacman
+      name: pacman
   template:
     metadata:
       labels:
@@ -124,7 +126,5 @@ spec:
         - containerPort: 8080
           name: http-server
 ---
-
-
 
 

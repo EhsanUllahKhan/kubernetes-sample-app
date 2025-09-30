@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: target-ns
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: small-disk-pv
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 10Gi
+  csi:
+    driver: vpc.block.csi.ibm.io
+    fsType: ext4
+    volumeAttributes:
+      iops: "5000"
+      region: us-east
+      volumeId: r014-eef03a49-be03-4625-8a3a-f0b9d96c17af
+      zone: us-east-1
+    volumeHandle: r014-eef03a49-be03-4625-8a3a-f0b9d96c17af
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: topology.kubernetes.io/zone
+          operator: In
+          values:
+          - us-east-1
+        - key: topology.kubernetes.io/region
+          operator: In
+          values:
+          - us-east
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - 10.241.0.112
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ibm-target-disk-pvc
+  namespace: target-ns
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: ""
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: target-ns-pod
+  namespace: target-ns
+spec:
+  containers:
+    - name: nginx-container
+      image: nginx
+      securityContext:
+        privileged: true
+      ports:
+        - containerPort: 80
+      volumeMounts:
+        - mountPath: /mnt/disk
+          name: ibm-target-disk-pv
+  volumes:
+    - name: ibm-target-disk-pv
+      persistentVolumeClaim:
+        claimName: ibm-target-disk-pvc
+  nodeSelector:
+    kubernetes.io/hostname: 10.241.0.112
+---

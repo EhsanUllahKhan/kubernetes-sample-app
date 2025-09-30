@@ -1,0 +1,52 @@
+# oc create serviceaccount sam
+# oc adm policy add-scc-to-user privileged -n sam -z sam
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sam
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sam-pvc
+  namespace: sam
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 3Gi
+  storageClassName: ibmc-file-bronze  # Supports non-root writes
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sam-app
+  namespace: sam
+  labels:
+    app: sam-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sam-app
+  template:
+    metadata:
+      labels:
+        app: sam-app
+    spec:
+      containers:
+      - name: nginx-sam-app
+        image: nginx:1.25
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: sam-vol
+          mountPath: /data  # Writable mount path
+      volumes:
+      - name: sam-vol
+        persistentVolumeClaim:
+          claimName: sam-pvc
+      serviceAccount: sam

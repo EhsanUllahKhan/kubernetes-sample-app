@@ -1,0 +1,98 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nfs-test-ns
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-file-share-velero-iks-pv
+spec:
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+    - sec=sys
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 10Gi
+  csi:
+    volumeAttributes:
+      nfsServerPath:  10.241.0.55:/1e835720_8ee7_44d7_b03c_5392178e0fbf
+    driver: vpc.file.csi.ibm.io
+    volumeHandle: r014-6f7fea12-e676-44e0-8737-a752790945c1:r014-3682ee14-d277-4f01-8d10-cb02da223f5e
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-file-share-velero-iks-pvc
+  namespace: nfs-test-ns
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-pod
+  namespace: nfs-test-ns
+  labels:
+    app: nfs-pod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nfs-pod
+  template:
+    metadata:
+      labels:
+        app: nfs-pod
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        volumeMounts:
+        - mountPath: /var/lib
+          name: nfs-file-share-velero-iks-pv
+      volumes:
+      - name: nfs-file-share-velero-iks-pv
+        persistentVolumeClaim:
+          claimName: nfs-file-share-velero-iks-pvc # The name of the PVC that you created earlier
+      nodeSelector:
+        node1: node1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-pod
+  namespace: nfs-test-ns
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - image: redis
+        name: redis
+        volumeMounts:
+        - mountPath: /var/lib
+          name: nfs-file-share-velero-iks-pv
+      volumes:
+      - name: nfs-file-share-velero-iks-pv
+        persistentVolumeClaim:
+          claimName: nfs-file-share-velero-iks-pvc
+      nodeSelector:
+        node2: node2
+---
